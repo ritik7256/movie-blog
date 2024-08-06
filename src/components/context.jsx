@@ -3,26 +3,28 @@ import { createContext } from "react";
 
 const AppContext = createContext();
 
-const API_URL = `http://www.omdbapi.com/?apikey=4dd29536&s=titanic`;
+ export const API_URL = `http://www.omdbapi.com/?apikey=${import.meta.env.VITE_API_KEY}`;
 
 const AppProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [movie, setMovie] = useState([]);
   const [isError, setIsError] = useState({ show: false, msg: "" });
+  const[query,setquery]=useState("mission")
 
   const getMovies = async (url) => {
+    setIsLoading(true)
     try {
       const res = await fetch(url);
       const data = await res.json();
 
-      if (data.Response === 'True') {  // Case-sensitive check
+      if (data.Response === 'True') {  
         setIsLoading(false);
         setMovie(data.Search);
         console.log(data.Search);
       } else {
         setIsError({
           show: true,
-          msg: data.Error,  // Error field in the OMDB response
+          msg: data.Error, 
         });
       }
     } catch (error) {
@@ -35,11 +37,14 @@ const AppProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    getMovies(API_URL);
-  }, []);
+   const timerout= setTimeout(() => {
+      getMovies(`${API_URL}&s=${query}`);
+    }, 1000);
+    return ()=>clearTimeout(timerout)
+  }, [query]);
 
   return (
-    <AppContext.Provider value={{ isLoading, isError, movie }}>
+    <AppContext.Provider value={{ isLoading, isError, movie ,query,setquery }}>
       {children}
     </AppContext.Provider>
   );
